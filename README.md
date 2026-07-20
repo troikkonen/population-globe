@@ -1,5 +1,7 @@
 # Population Globe
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE) [![Live Demo](https://img.shields.io/badge/%E2%96%B6%20Live%20Demo-cliffordmckenna.com%2Fmaps-2563eb)](https://cliffordmckenna.com/maps/)
+
 > 87% of humanity lives north of the equator — an interactive 3D visualization in a single HTML file
 
 ![The population globe: glowing city lights across the Northern Hemisphere with the count-up intro](preview.png)
