@@ -801,7 +801,6 @@ function startIntro(){
   topHud.style.opacity = 0;
   bottomHud.style.opacity = 0;
   localClockWrap.style.opacity = 0;
-  document.getElementById('homeLink').style.opacity = 0;
   vpGroup.visible = false;
   card.classList.remove('show');
   sweepCounter.classList.add('show');
@@ -817,7 +816,6 @@ function endIntro(){
   topHud.style.opacity = 1;
   bottomHud.style.opacity = 1;
   localClockWrap.style.opacity = 1;
-  document.getElementById('homeLink').style.opacity = 1;
   vpGroup.visible = vpOn;
 }
 introBtn.addEventListener('click', ()=>{ if(!introActive) startIntro(); });

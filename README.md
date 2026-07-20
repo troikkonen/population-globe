@@ -2,6 +2,8 @@
 
 > 87% of humanity lives north of the equator — an interactive 3D visualization in a single HTML file
 
+![The population globe: glowing city lights across the Northern Hemisphere with the count-up intro](preview.png)
+
 **[▶ Live demo](https://cliffordmckenna.com/maps/)**
 
 ## Features
