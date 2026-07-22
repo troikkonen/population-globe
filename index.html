@@ -126,7 +126,7 @@
   <div class="sub" id="sweepSub"></div>
 </div>
 
-<div class="hint" id="hint">Drag to spin · Pinch or scroll to zoom · Tap a city name</div>
+<div class="hint" id="hint">Drag to spin · Pinch or scroll to zoom · Tap any city light</div>
 
 <button class="ctrl" id="pauseBtn" aria-label="Pause rotation">&#10074;&#10074;</button>
 
@@ -163,83 +163,144 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 // ------------------------------------------------------------------
-// City data: [lat, lon, metro population in millions] (approximate)
+// City data: [lat, lon, metro population in millions, name, IANA timezone]
 // Enough cities that the dots themselves trace the continents.
+// Every dot is tappable: names stay hidden until you tap the light.
 // ------------------------------------------------------------------
 const CITIES = [
 // East Asia
-[35.68,139.69,37],[34.69,135.50,19],[35.02,135.75,2.6],[33.59,130.40,5.5],[43.06,141.35,2.6],[35.18,136.91,9.4],
-[31.23,121.47,27],[39.90,116.40,21],[23.13,113.26,14],[22.54,114.06,13],[30.57,104.07,16],[29.56,106.55,15],
-[22.82,108.32,4],[30.29,120.16,10],[32.06,118.78,9],[34.34,108.94,10],[38.04,114.51,4.5],[36.06,120.38,6],
-[41.80,123.43,7],[45.80,126.53,6],[43.82,87.62,4],[36.65,117.12,5],[34.75,113.62,7],[30.59,114.30,11],
-[28.68,115.86,3],[26.07,119.30,4],[24.48,118.09,4],[25.04,102.72,5],[26.58,106.71,3],[37.87,112.55,4],
-[39.13,117.20,14],[37.46,126.70,3],[37.57,126.98,26],[35.87,128.60,2.5],[35.16,129.05,3.4],[25.03,121.57,7],
-[22.63,120.30,2.7],[22.28,114.16,7.5],[47.92,106.92,1.6],[39.03,125.75,3],
+[35.68,139.69,37,"Tokyo","Asia/Tokyo"],[34.69,135.50,19,"Osaka","Asia/Tokyo"],[35.02,135.75,2.6,"Kyoto","Asia/Tokyo"],
+[33.59,130.40,5.5,"Fukuoka","Asia/Tokyo"],[43.06,141.35,2.6,"Sapporo","Asia/Tokyo"],[35.18,136.91,9.4,"Nagoya","Asia/Tokyo"],
+[31.23,121.47,27,"Shanghai","Asia/Shanghai"],[39.90,116.40,21,"Beijing","Asia/Shanghai"],[23.13,113.26,14,"Guangzhou","Asia/Shanghai"],
+[22.54,114.06,13,"Shenzhen","Asia/Shanghai"],[30.57,104.07,16,"Chengdu","Asia/Shanghai"],[29.56,106.55,15,"Chongqing","Asia/Shanghai"],
+[22.82,108.32,4,"Nanning","Asia/Shanghai"],[30.29,120.16,10,"Hangzhou","Asia/Shanghai"],[32.06,118.78,9,"Nanjing","Asia/Shanghai"],
+[34.34,108.94,10,"Xi'an","Asia/Shanghai"],[38.04,114.51,4.5,"Shijiazhuang","Asia/Shanghai"],[36.06,120.38,6,"Qingdao","Asia/Shanghai"],
+[41.80,123.43,7,"Shenyang","Asia/Shanghai"],[45.80,126.53,6,"Harbin","Asia/Shanghai"],[43.82,87.62,4,"Ürümqi","Asia/Shanghai"],
+[36.65,117.12,5,"Jinan","Asia/Shanghai"],[34.75,113.62,7,"Zhengzhou","Asia/Shanghai"],[30.59,114.30,11,"Wuhan","Asia/Shanghai"],
+[28.68,115.86,3,"Nanchang","Asia/Shanghai"],[26.07,119.30,4,"Fuzhou","Asia/Shanghai"],[24.48,118.09,4,"Xiamen","Asia/Shanghai"],
+[25.04,102.72,5,"Kunming","Asia/Shanghai"],[26.58,106.71,3,"Guiyang","Asia/Shanghai"],[37.87,112.55,4,"Taiyuan","Asia/Shanghai"],
+[39.13,117.20,14,"Tianjin","Asia/Shanghai"],[37.46,126.70,3,"Incheon","Asia/Seoul"],[37.57,126.98,26,"Seoul","Asia/Seoul"],
+[35.87,128.60,2.5,"Daegu","Asia/Seoul"],[35.16,129.05,3.4,"Busan","Asia/Seoul"],[25.03,121.57,7,"Taipei","Asia/Taipei"],
+[22.63,120.30,2.7,"Kaohsiung","Asia/Taipei"],[22.28,114.16,7.5,"Hong Kong","Asia/Hong_Kong"],[47.92,106.92,1.6,"Ulaanbaatar","Asia/Ulaanbaatar"],
+[39.03,125.75,3,"Pyongyang","Asia/Pyongyang"],
 // South Asia
-[28.61,77.21,32],[19.08,72.88,21],[22.57,88.36,15],[13.08,80.27,11],[12.97,77.59,13],[17.39,78.49,10],
-[18.52,73.86,7],[23.03,72.58,8],[26.85,80.95,3.7],[26.92,75.79,4],[21.15,79.09,3],[22.72,75.86,3.3],
-[25.59,85.14,2.5],[23.26,77.41,2.6],[31.63,74.87,2],[30.73,76.78,1.6],[8.52,76.94,1.7],[9.93,76.26,2.1],
-[24.86,67.01,17],[31.55,74.34,13],[33.68,73.04,4],[34.01,71.58,2],[30.20,71.47,2.2],[23.81,90.41,22],
-[22.36,91.79,5],[24.37,88.60,1],[27.71,85.32,3],[6.93,79.85,2.3],
+[28.61,77.21,32,"Delhi","Asia/Kolkata"],[19.08,72.88,21,"Mumbai","Asia/Kolkata"],[22.57,88.36,15,"Kolkata","Asia/Kolkata"],
+[13.08,80.27,11,"Chennai","Asia/Kolkata"],[12.97,77.59,13,"Bengaluru","Asia/Kolkata"],[17.39,78.49,10,"Hyderabad","Asia/Kolkata"],
+[18.52,73.86,7,"Pune","Asia/Kolkata"],[23.03,72.58,8,"Ahmedabad","Asia/Kolkata"],[26.85,80.95,3.7,"Lucknow","Asia/Kolkata"],
+[26.92,75.79,4,"Jaipur","Asia/Kolkata"],[21.15,79.09,3,"Nagpur","Asia/Kolkata"],[22.72,75.86,3.3,"Indore","Asia/Kolkata"],
+[25.59,85.14,2.5,"Patna","Asia/Kolkata"],[23.26,77.41,2.6,"Bhopal","Asia/Kolkata"],[31.63,74.87,2,"Amritsar","Asia/Kolkata"],
+[30.73,76.78,1.6,"Chandigarh","Asia/Kolkata"],[8.52,76.94,1.7,"Thiruvananthapuram","Asia/Kolkata"],[9.93,76.26,2.1,"Kochi","Asia/Kolkata"],
+[24.86,67.01,17,"Karachi","Asia/Karachi"],[31.55,74.34,13,"Lahore","Asia/Karachi"],[33.68,73.04,4,"Islamabad","Asia/Karachi"],
+[34.01,71.58,2,"Peshawar","Asia/Karachi"],[30.20,71.47,2.2,"Multan","Asia/Karachi"],[23.81,90.41,22,"Dhaka","Asia/Dhaka"],
+[22.36,91.79,5,"Chittagong","Asia/Dhaka"],[24.37,88.60,1,"Rajshahi","Asia/Dhaka"],[27.71,85.32,3,"Kathmandu","Asia/Kathmandu"],
+[6.93,79.85,2.3,"Colombo","Asia/Colombo"],
 // Southeast Asia
-[13.76,100.50,17],[10.82,106.63,14],[21.03,105.85,8],[16.05,108.20,1.2],[14.60,120.98,24],[10.32,123.90,3],
-[7.07,125.61,1.9],[3.14,101.69,8],[1.35,103.82,6],[-6.21,106.85,33],[-6.90,107.61,8.6],[-7.25,112.75,10],
-[-6.99,110.42,1.8],[-8.65,115.22,1],[3.59,98.67,2.5],[-5.15,119.43,1.6],[16.87,96.20,5.5],[21.98,96.08,1.5],
-[11.56,104.92,2.3],[17.97,102.60,1],
+[13.76,100.50,17,"Bangkok","Asia/Bangkok"],[10.82,106.63,14,"Ho Chi Minh City","Asia/Ho_Chi_Minh"],[21.03,105.85,8,"Hanoi","Asia/Ho_Chi_Minh"],
+[16.05,108.20,1.2,"Da Nang","Asia/Ho_Chi_Minh"],[14.60,120.98,24,"Manila","Asia/Manila"],[10.32,123.90,3,"Cebu","Asia/Manila"],
+[7.07,125.61,1.9,"Davao","Asia/Manila"],[3.14,101.69,8,"Kuala Lumpur","Asia/Kuala_Lumpur"],[1.35,103.82,6,"Singapore","Asia/Singapore"],
+[-6.21,106.85,33,"Jakarta","Asia/Jakarta"],[-6.90,107.61,8.6,"Bandung","Asia/Jakarta"],[-7.25,112.75,10,"Surabaya","Asia/Jakarta"],
+[-6.99,110.42,1.8,"Semarang","Asia/Jakarta"],[-8.65,115.22,1,"Denpasar","Asia/Makassar"],[3.59,98.67,2.5,"Medan","Asia/Jakarta"],
+[-5.15,119.43,1.6,"Makassar","Asia/Makassar"],[16.87,96.20,5.5,"Yangon","Asia/Yangon"],[21.98,96.08,1.5,"Mandalay","Asia/Yangon"],
+[11.56,104.92,2.3,"Phnom Penh","Asia/Phnom_Penh"],[17.97,102.60,1,"Vientiane","Asia/Vientiane"],
 // Middle East & Central Asia
-[35.69,51.39,15],[36.30,59.60,3.4],[32.65,51.67,2.2],[29.61,52.53,1.9],[38.08,46.29,1.8],
-[33.31,44.36,8],[36.34,43.13,1.8],[30.51,47.81,1.4],[33.51,36.29,2.5],[36.20,37.16,2],[33.89,35.50,2.4],
-[31.77,35.22,1],[32.09,34.78,4.4],[31.95,35.93,2.2],[24.71,46.68,7.7],[21.49,39.19,4.8],[26.43,50.10,1],
-[25.28,51.53,2.4],[25.20,55.27,3.6],[24.45,54.38,1.5],[23.59,58.41,1.6],[15.37,44.19,3],[41.01,28.98,16],
-[39.93,32.86,5.8],[38.42,27.14,3],[37.00,35.32,2.3],[40.18,44.51,1.1],[40.41,49.87,2.4],[41.72,44.83,1.2],
-[41.31,69.28,3],[43.24,76.95,2],[38.56,68.79,1],[42.87,74.59,1.1],[37.95,58.38,1],[34.53,69.17,4.6],
+[35.69,51.39,15,"Tehran","Asia/Tehran"],[36.30,59.60,3.4,"Mashhad","Asia/Tehran"],[32.65,51.67,2.2,"Isfahan","Asia/Tehran"],
+[29.61,52.53,1.9,"Shiraz","Asia/Tehran"],[38.08,46.29,1.8,"Tabriz","Asia/Tehran"],
+[33.31,44.36,8,"Baghdad","Asia/Baghdad"],[36.34,43.13,1.8,"Mosul","Asia/Baghdad"],[30.51,47.81,1.4,"Basra","Asia/Baghdad"],
+[33.51,36.29,2.5,"Damascus","Asia/Damascus"],[36.20,37.16,2,"Aleppo","Asia/Damascus"],[33.89,35.50,2.4,"Beirut","Asia/Beirut"],
+[31.77,35.22,1,"Jerusalem","Asia/Jerusalem"],[32.09,34.78,4.4,"Tel Aviv","Asia/Jerusalem"],[31.95,35.93,2.2,"Amman","Asia/Amman"],
+[24.71,46.68,7.7,"Riyadh","Asia/Riyadh"],[21.49,39.19,4.8,"Jeddah","Asia/Riyadh"],[26.43,50.10,1,"Dammam","Asia/Riyadh"],
+[25.28,51.53,2.4,"Doha","Asia/Qatar"],[25.20,55.27,3.6,"Dubai","Asia/Dubai"],[24.45,54.38,1.5,"Abu Dhabi","Asia/Dubai"],
+[23.59,58.41,1.6,"Muscat","Asia/Muscat"],[15.37,44.19,3,"Sanaa","Asia/Aden"],[41.01,28.98,16,"Istanbul","Europe/Istanbul"],
+[39.93,32.86,5.8,"Ankara","Europe/Istanbul"],[38.42,27.14,3,"Izmir","Europe/Istanbul"],[37.00,35.32,2.3,"Adana","Europe/Istanbul"],
+[40.18,44.51,1.1,"Yerevan","Asia/Yerevan"],[40.41,49.87,2.4,"Baku","Asia/Baku"],[41.72,44.83,1.2,"Tbilisi","Asia/Tbilisi"],
+[41.31,69.28,3,"Tashkent","Asia/Tashkent"],[43.24,76.95,2,"Almaty","Asia/Almaty"],[38.56,68.79,1,"Dushanbe","Asia/Dushanbe"],
+[42.87,74.59,1.1,"Bishkek","Asia/Bishkek"],[37.95,58.38,1,"Ashgabat","Asia/Ashgabat"],[34.53,69.17,4.6,"Kabul","Asia/Kabul"],
 // Europe
-[51.51,-0.13,14],[53.48,-2.24,2.8],[52.49,-1.90,2.9],[55.86,-4.25,1.7],[53.41,-6.27,1.4],
-[48.86,2.35,13],[45.76,4.84,2.3],[43.30,5.37,1.9],[50.85,4.35,2.1],[52.37,4.90,2.5],[51.92,4.48,1.8],
-[40.42,-3.70,6.7],[41.39,2.17,5.6],[37.39,-5.99,1.5],[39.47,-0.38,1.6],[41.16,-8.63,1.7],[38.72,-9.14,2.9],
-[52.52,13.40,4.5],[53.55,9.99,3.3],[48.14,11.58,2.9],[50.11,8.68,2.7],[50.94,6.96,3.5],[51.23,6.78,3],
-[48.21,16.37,2.9],[47.37,8.54,1.4],[45.46,9.19,4.9],[41.90,12.50,4.3],[40.85,14.27,3.1],[45.07,7.69,1.7],
-[37.98,23.73,3.6],[40.64,22.94,1.1],[41.33,19.82,1],[44.80,20.47,1.7],[45.81,15.98,1.1],[44.43,26.10,2.3],
-[42.70,23.32,1.7],[47.50,19.04,2.5],[50.08,14.44,2.2],[48.15,17.11,1],[52.23,21.01,3.1],[50.06,19.94,1.4],
-[51.11,17.03,1.1],[54.35,18.65,1],[59.33,18.07,2.4],[59.91,10.75,1.5],[55.68,12.57,2.1],[60.17,24.94,1.5],
-[56.95,24.11,1],[54.69,25.28,0.8],[59.44,24.75,0.6],[55.75,37.62,17],[59.93,30.34,5.4],[55.79,49.11,1.3],
-[56.84,60.61,1.5],[55.03,82.92,1.7],[53.35,83.78,0.9],[56.01,92.87,1.1],[52.29,104.28,0.6],[43.12,131.89,0.6],
-[50.45,30.52,3],[49.99,36.23,1.4],[46.48,30.73,1],[48.62,22.30,0.4],[53.90,27.57,2],[47.01,28.86,0.8],
+[51.51,-0.13,14,"London","Europe/London"],[53.48,-2.24,2.8,"Manchester","Europe/London"],[52.49,-1.90,2.9,"Birmingham","Europe/London"],
+[55.86,-4.25,1.7,"Glasgow","Europe/London"],[53.41,-6.27,1.4,"Dublin","Europe/Dublin"],
+[48.86,2.35,13,"Paris","Europe/Paris"],[45.76,4.84,2.3,"Lyon","Europe/Paris"],[43.30,5.37,1.9,"Marseille","Europe/Paris"],
+[50.85,4.35,2.1,"Brussels","Europe/Brussels"],[52.37,4.90,2.5,"Amsterdam","Europe/Amsterdam"],[51.92,4.48,1.8,"Rotterdam","Europe/Amsterdam"],
+[40.42,-3.70,6.7,"Madrid","Europe/Madrid"],[41.39,2.17,5.6,"Barcelona","Europe/Madrid"],[37.39,-5.99,1.5,"Seville","Europe/Madrid"],
+[39.47,-0.38,1.6,"Valencia","Europe/Madrid"],[41.16,-8.63,1.7,"Porto","Europe/Lisbon"],[38.72,-9.14,2.9,"Lisbon","Europe/Lisbon"],
+[52.52,13.40,4.5,"Berlin","Europe/Berlin"],[53.55,9.99,3.3,"Hamburg","Europe/Berlin"],[48.14,11.58,2.9,"Munich","Europe/Berlin"],
+[50.11,8.68,2.7,"Frankfurt","Europe/Berlin"],[50.94,6.96,3.5,"Cologne","Europe/Berlin"],[51.23,6.78,3,"Düsseldorf","Europe/Berlin"],
+[48.21,16.37,2.9,"Vienna","Europe/Vienna"],[47.37,8.54,1.4,"Zurich","Europe/Zurich"],[45.46,9.19,4.9,"Milan","Europe/Rome"],
+[41.90,12.50,4.3,"Rome","Europe/Rome"],[40.85,14.27,3.1,"Naples","Europe/Rome"],[45.07,7.69,1.7,"Turin","Europe/Rome"],
+[37.98,23.73,3.6,"Athens","Europe/Athens"],[40.64,22.94,1.1,"Thessaloniki","Europe/Athens"],[41.33,19.82,1,"Tirana","Europe/Tirane"],
+[44.80,20.47,1.7,"Belgrade","Europe/Belgrade"],[45.81,15.98,1.1,"Zagreb","Europe/Zagreb"],[44.43,26.10,2.3,"Bucharest","Europe/Bucharest"],
+[42.70,23.32,1.7,"Sofia","Europe/Sofia"],[47.50,19.04,2.5,"Budapest","Europe/Budapest"],[50.08,14.44,2.2,"Prague","Europe/Prague"],
+[48.15,17.11,1,"Bratislava","Europe/Bratislava"],[52.23,21.01,3.1,"Warsaw","Europe/Warsaw"],[50.06,19.94,1.4,"Kraków","Europe/Warsaw"],
+[51.11,17.03,1.1,"Wrocław","Europe/Warsaw"],[54.35,18.65,1,"Gdańsk","Europe/Warsaw"],[59.33,18.07,2.4,"Stockholm","Europe/Stockholm"],
+[59.91,10.75,1.5,"Oslo","Europe/Oslo"],[55.68,12.57,2.1,"Copenhagen","Europe/Copenhagen"],[60.17,24.94,1.5,"Helsinki","Europe/Helsinki"],
+[56.95,24.11,1,"Riga","Europe/Riga"],[54.69,25.28,0.8,"Vilnius","Europe/Vilnius"],[59.44,24.75,0.6,"Tallinn","Europe/Tallinn"],
+[55.75,37.62,17,"Moscow","Europe/Moscow"],[59.93,30.34,5.4,"Saint Petersburg","Europe/Moscow"],[55.79,49.11,1.3,"Kazan","Europe/Moscow"],
+[56.84,60.61,1.5,"Yekaterinburg","Asia/Yekaterinburg"],[55.03,82.92,1.7,"Novosibirsk","Asia/Novosibirsk"],[53.35,83.78,0.9,"Barnaul","Asia/Barnaul"],
+[56.01,92.87,1.1,"Krasnoyarsk","Asia/Krasnoyarsk"],[52.29,104.28,0.6,"Irkutsk","Asia/Irkutsk"],[43.12,131.89,0.6,"Vladivostok","Asia/Vladivostok"],
+[50.45,30.52,3,"Kyiv","Europe/Kyiv"],[49.99,36.23,1.4,"Kharkiv","Europe/Kyiv"],[46.48,30.73,1,"Odesa","Europe/Kyiv"],
+[48.62,22.30,0.4,"Uzhhorod","Europe/Kyiv"],[53.90,27.57,2,"Minsk","Europe/Minsk"],[47.01,28.86,0.8,"Chisinau","Europe/Chisinau"],
 // Africa (north of equator)
-[30.04,31.24,22],[31.20,29.92,5.5],[36.75,3.06,2.8],[36.81,10.18,2.4],[33.57,-7.59,3.8],[34.02,-6.83,1.9],
-[32.89,13.19,1.2],[15.59,32.53,6],[9.03,38.75,5.4],[6.52,3.38,16],[7.38,3.90,3.7],[9.06,7.49,3.8],
-[12.00,8.52,4.4],[11.85,13.16,1.2],[6.45,7.51,0.8],[4.05,9.70,1.5],[3.87,11.52,4.2],[5.56,-0.20,2.6],
-[6.69,-1.62,3.5],[5.32,-4.02,5.6],[6.13,1.22,1.9],[12.37,-1.53,3],[12.65,-8.00,2.9],[13.51,2.11,1.4],
-[14.69,-17.44,3.9],[13.45,-16.58,0.5],[9.51,-13.71,2],[8.48,-13.23,1.2],[6.31,-10.80,1.5],[9.02,38.75,1],
-[2.05,45.32,2.6],[0.32,32.58,3.7],[11.59,43.15,0.6],[15.34,38.93,1],[18.09,-15.98,1.3],[13.00,30.00,0.5],
+[30.04,31.24,22,"Cairo","Africa/Cairo"],[31.20,29.92,5.5,"Alexandria","Africa/Cairo"],[36.75,3.06,2.8,"Algiers","Africa/Algiers"],
+[36.81,10.18,2.4,"Tunis","Africa/Tunis"],[33.57,-7.59,3.8,"Casablanca","Africa/Casablanca"],[34.02,-6.83,1.9,"Rabat","Africa/Casablanca"],
+[32.89,13.19,1.2,"Tripoli","Africa/Tripoli"],[15.59,32.53,6,"Khartoum","Africa/Khartoum"],[9.03,38.75,5.4,"Addis Ababa","Africa/Addis_Ababa"],
+[6.52,3.38,16,"Lagos","Africa/Lagos"],[7.38,3.90,3.7,"Ibadan","Africa/Lagos"],[9.06,7.49,3.8,"Abuja","Africa/Lagos"],
+[12.00,8.52,4.4,"Kano","Africa/Lagos"],[11.85,13.16,1.2,"Maiduguri","Africa/Lagos"],[6.45,7.51,0.8,"Enugu","Africa/Lagos"],
+[4.05,9.70,1.5,"Douala","Africa/Douala"],[3.87,11.52,4.2,"Yaoundé","Africa/Douala"],[5.56,-0.20,2.6,"Accra","Africa/Accra"],
+[6.69,-1.62,3.5,"Kumasi","Africa/Accra"],[5.32,-4.02,5.6,"Abidjan","Africa/Abidjan"],[6.13,1.22,1.9,"Lomé","Africa/Lome"],
+[12.37,-1.53,3,"Ouagadougou","Africa/Ouagadougou"],[12.65,-8.00,2.9,"Bamako","Africa/Bamako"],[13.51,2.11,1.4,"Niamey","Africa/Niamey"],
+[14.69,-17.44,3.9,"Dakar","Africa/Dakar"],[13.45,-16.58,0.5,"Banjul","Africa/Banjul"],[9.51,-13.71,2,"Conakry","Africa/Conakry"],
+[8.48,-13.23,1.2,"Freetown","Africa/Freetown"],[6.31,-10.80,1.5,"Monrovia","Africa/Monrovia"],[9.02,38.75,1,"Addis Ababa","Africa/Addis_Ababa"],
+[2.05,45.32,2.6,"Mogadishu","Africa/Mogadishu"],[0.32,32.58,3.7,"Kampala","Africa/Kampala"],[11.59,43.15,0.6,"Djibouti","Africa/Djibouti"],
+[15.34,38.93,1,"Asmara","Africa/Asmara"],[18.09,-15.98,1.3,"Nouakchott","Africa/Nouakchott"],[13.00,30.00,0.5,"El Obeid","Africa/Khartoum"],
 // Africa (equatorial & south)
-[-1.29,36.82,5.1],[-6.79,39.21,7],[-4.32,15.31,17],[-4.27,15.27,2.5],[-8.84,13.23,9],[-15.42,28.28,3.2],
-[-17.83,31.05,1.6],[-25.97,32.58,1.2],[-26.20,28.05,10],[-25.75,28.19,2.7],[-29.86,31.02,3.9],[-33.92,18.42,4.8],
-[-33.96,25.60,1.3],[-22.56,17.08,0.4],[-24.65,25.91,0.3],[-18.88,47.51,3.7],[-20.16,57.50,0.6],[-3.38,29.36,1.1],
-[-1.95,30.06,1.4],[0.51,25.19,1.6],[4.36,18.55,0.9],[-11.66,27.48,2.7],[-15.79,35.01,1.1],[-19.83,34.84,0.8],
+[-1.29,36.82,5.1,"Nairobi","Africa/Nairobi"],[-6.79,39.21,7,"Dar es Salaam","Africa/Dar_es_Salaam"],[-4.32,15.31,17,"Kinshasa","Africa/Kinshasa"],
+[-4.27,15.27,2.5,"Brazzaville","Africa/Brazzaville"],[-8.84,13.23,9,"Luanda","Africa/Luanda"],[-15.42,28.28,3.2,"Lusaka","Africa/Lusaka"],
+[-17.83,31.05,1.6,"Harare","Africa/Harare"],[-25.97,32.58,1.2,"Maputo","Africa/Maputo"],[-26.20,28.05,10,"Johannesburg","Africa/Johannesburg"],
+[-25.75,28.19,2.7,"Pretoria","Africa/Johannesburg"],[-29.86,31.02,3.9,"Durban","Africa/Johannesburg"],[-33.92,18.42,4.8,"Cape Town","Africa/Johannesburg"],
+[-33.96,25.60,1.3,"Port Elizabeth","Africa/Johannesburg"],[-22.56,17.08,0.4,"Windhoek","Africa/Windhoek"],[-24.65,25.91,0.3,"Gaborone","Africa/Gaborone"],
+[-18.88,47.51,3.7,"Antananarivo","Indian/Antananarivo"],[-20.16,57.50,0.6,"Port Louis","Indian/Mauritius"],[-3.38,29.36,1.1,"Bujumbura","Africa/Bujumbura"],
+[-1.95,30.06,1.4,"Kigali","Africa/Kigali"],[0.51,25.19,1.6,"Kisangani","Africa/Lubumbashi"],[4.36,18.55,0.9,"Bangui","Africa/Bangui"],
+[-11.66,27.48,2.7,"Lubumbashi","Africa/Lubumbashi"],[-15.79,35.01,1.1,"Blantyre","Africa/Blantyre"],[-19.83,34.84,0.8,"Beira","Africa/Maputo"],
 // North America
-[40.71,-74.01,19],[34.05,-118.24,12.5],[41.88,-87.63,8.9],[29.76,-95.37,6.7],[32.78,-96.80,7.6],
-[33.45,-112.07,4.9],[29.42,-98.49,2.6],[32.72,-117.16,3.3],[37.77,-122.42,4.6],[37.34,-121.89,2],
-[47.61,-122.33,4],[45.52,-122.68,2.5],[39.74,-104.99,3],[44.98,-93.27,3.7],[38.63,-90.20,2.8],
-[39.10,-94.58,2.2],[35.15,-90.05,1.3],[36.16,-86.78,2.1],[33.75,-84.39,6.1],[25.76,-80.19,6.1],
-[28.54,-81.38,2.7],[27.95,-82.46,3.2],[30.33,-81.66,1.6],[35.23,-80.84,2.7],[35.78,-78.64,1.5],
-[38.91,-77.04,6.3],[39.29,-76.61,2.8],[39.95,-75.17,6.2],[40.44,-79.99,2.3],[42.36,-71.06,4.9],
-[43.65,-79.38,6.4],[45.50,-73.57,4.3],[49.28,-123.12,2.7],[51.05,-114.07,1.6],[53.55,-113.49,1.5],
-[45.42,-75.70,1.4],[19.43,-99.13,22],[20.67,-103.35,5.3],[25.69,-100.32,5.3],[19.04,-98.20,3.2],
-[21.16,-86.85,1],[32.53,-117.02,2.2],[31.69,-106.42,1.5],[20.97,-89.62,1.2],[14.63,-90.51,3],
-[13.69,-89.19,1.1],[14.08,-87.21,1.4],[12.15,-86.27,1.1],[9.93,-84.08,2.2],[8.98,-79.52,1.9],
-[23.11,-82.37,2.1],[18.47,-69.90,3.3],[18.54,-72.34,2.8],[18.47,-66.11,2.4],[18.01,-76.80,1.2],
+[40.71,-74.01,19,"New York","America/New_York"],[34.05,-118.24,12.5,"Los Angeles","America/Los_Angeles"],[41.88,-87.63,8.9,"Chicago","America/Chicago"],
+[29.76,-95.37,6.7,"Houston","America/Chicago"],[32.78,-96.80,7.6,"Dallas","America/Chicago"],
+[33.45,-112.07,4.9,"Phoenix","America/Phoenix"],[29.42,-98.49,2.6,"San Antonio","America/Chicago"],[32.72,-117.16,3.3,"San Diego","America/Los_Angeles"],
+[37.77,-122.42,4.6,"San Francisco","America/Los_Angeles"],[37.34,-121.89,2,"San Jose","America/Los_Angeles"],
+[47.61,-122.33,4,"Seattle","America/Los_Angeles"],[45.52,-122.68,2.5,"Portland","America/Los_Angeles"],[39.74,-104.99,3,"Denver","America/Denver"],
+[44.98,-93.27,3.7,"Minneapolis","America/Chicago"],[38.63,-90.20,2.8,"St. Louis","America/Chicago"],
+[39.10,-94.58,2.2,"Kansas City","America/Chicago"],[35.15,-90.05,1.3,"Memphis","America/Chicago"],[36.16,-86.78,2.1,"Nashville","America/Chicago"],
+[33.75,-84.39,6.1,"Atlanta","America/New_York"],[25.76,-80.19,6.1,"Miami","America/New_York"],
+[28.54,-81.38,2.7,"Orlando","America/New_York"],[27.95,-82.46,3.2,"Tampa","America/New_York"],[30.33,-81.66,1.6,"Jacksonville","America/New_York"],
+[35.23,-80.84,2.7,"Charlotte","America/New_York"],[35.78,-78.64,1.5,"Raleigh","America/New_York"],
+[38.91,-77.04,6.3,"Washington, D.C.","America/New_York"],[39.29,-76.61,2.8,"Baltimore","America/New_York"],[39.95,-75.17,6.2,"Philadelphia","America/New_York"],
+[40.44,-79.99,2.3,"Pittsburgh","America/New_York"],[42.36,-71.06,4.9,"Boston","America/New_York"],
+[43.65,-79.38,6.4,"Toronto","America/Toronto"],[45.50,-73.57,4.3,"Montreal","America/Toronto"],[49.28,-123.12,2.7,"Vancouver","America/Vancouver"],
+[51.05,-114.07,1.6,"Calgary","America/Edmonton"],[53.55,-113.49,1.5,"Edmonton","America/Edmonton"],
+[45.42,-75.70,1.4,"Ottawa","America/Toronto"],[19.43,-99.13,22,"Mexico City","America/Mexico_City"],[20.67,-103.35,5.3,"Guadalajara","America/Mexico_City"],
+[25.69,-100.32,5.3,"Monterrey","America/Monterrey"],[19.04,-98.20,3.2,"Puebla","America/Mexico_City"],
+[21.16,-86.85,1,"Cancún","America/Cancun"],[32.53,-117.02,2.2,"Tijuana","America/Tijuana"],[31.69,-106.42,1.5,"Ciudad Juárez","America/Ciudad_Juarez"],
+[20.97,-89.62,1.2,"Mérida","America/Merida"],[14.63,-90.51,3,"Guatemala City","America/Guatemala"],
+[13.69,-89.19,1.1,"San Salvador","America/El_Salvador"],[14.08,-87.21,1.4,"Tegucigalpa","America/Tegucigalpa"],[12.15,-86.27,1.1,"Managua","America/Managua"],
+[9.93,-84.08,2.2,"San José","America/Costa_Rica"],[8.98,-79.52,1.9,"Panama City","America/Panama"],
+[23.11,-82.37,2.1,"Havana","America/Havana"],[18.47,-69.90,3.3,"Santo Domingo","America/Santo_Domingo"],[18.54,-72.34,2.8,"Port-au-Prince","America/Port-au-Prince"],
+[18.47,-66.11,2.4,"San Juan","America/Puerto_Rico"],[18.01,-76.80,1.2,"Kingston","America/Jamaica"],
 // South America
-[4.71,-74.07,11],[6.25,-75.56,4],[3.44,-76.52,2.8],[10.49,-66.88,2.9],[10.65,-71.61,2.2],
-[-0.18,-78.47,2.8],[-2.19,-79.89,3.1],[-12.05,-77.04,11],[-16.50,-68.15,1.9],[-17.78,-63.18,1.9],
-[-23.55,-46.63,22],[-22.91,-43.17,13.6],[-19.92,-43.94,6],[-25.43,-49.27,3.7],[-30.03,-51.23,4.3],
-[-15.79,-47.88,4.8],[-12.97,-38.50,4],[-8.05,-34.88,4.1],[-3.72,-38.54,4.1],[-1.46,-48.50,2.3],
-[-3.10,-60.02,2.7],[-34.60,-58.38,15.6],[-31.42,-64.18,1.6],[-32.95,-60.64,1.4],[-33.45,-70.67,7.1],
-[-34.90,-56.16,1.8],[-25.26,-57.58,3.3],
+[4.71,-74.07,11,"Bogotá","America/Bogota"],[6.25,-75.56,4,"Medellín","America/Bogota"],[3.44,-76.52,2.8,"Cali","America/Bogota"],
+[10.49,-66.88,2.9,"Caracas","America/Caracas"],[10.65,-71.61,2.2,"Maracaibo","America/Caracas"],
+[-0.18,-78.47,2.8,"Quito","America/Guayaquil"],[-2.19,-79.89,3.1,"Guayaquil","America/Guayaquil"],[-12.05,-77.04,11,"Lima","America/Lima"],
+[-16.50,-68.15,1.9,"La Paz","America/La_Paz"],[-17.78,-63.18,1.9,"Santa Cruz","America/La_Paz"],
+[-23.55,-46.63,22,"São Paulo","America/Sao_Paulo"],[-22.91,-43.17,13.6,"Rio de Janeiro","America/Sao_Paulo"],[-19.92,-43.94,6,"Belo Horizonte","America/Sao_Paulo"],
+[-25.43,-49.27,3.7,"Curitiba","America/Sao_Paulo"],[-30.03,-51.23,4.3,"Porto Alegre","America/Sao_Paulo"],
+[-15.79,-47.88,4.8,"Brasília","America/Sao_Paulo"],[-12.97,-38.50,4,"Salvador","America/Bahia"],[-8.05,-34.88,4.1,"Recife","America/Recife"],
+[-3.72,-38.54,4.1,"Fortaleza","America/Fortaleza"],[-1.46,-48.50,2.3,"Belém","America/Belem"],
+[-3.10,-60.02,2.7,"Manaus","America/Manaus"],[-34.60,-58.38,15.6,"Buenos Aires","America/Argentina/Buenos_Aires"],[-31.42,-64.18,1.6,"Córdoba","America/Argentina/Cordoba"],
+[-32.95,-60.64,1.4,"Rosario","America/Argentina/Cordoba"],[-33.45,-70.67,7.1,"Santiago","America/Santiago"],
+[-34.90,-56.16,1.8,"Montevideo","America/Montevideo"],[-25.26,-57.58,3.3,"Asunción","America/Asuncion"],
 // Oceania
-[-33.87,151.21,5.4],[-37.81,144.96,5.2],[-27.47,153.03,2.6],[-31.95,115.86,2.2],[-34.93,138.60,1.4],
-[-35.28,149.13,0.5],[-36.85,174.76,1.7],[-41.29,174.78,0.4],[-43.53,172.64,0.4],[-9.44,147.18,0.4],
-[-17.75,177.45,0.2],[21.31,-157.86,1],
+[-33.87,151.21,5.4,"Sydney","Australia/Sydney"],[-37.81,144.96,5.2,"Melbourne","Australia/Melbourne"],[-27.47,153.03,2.6,"Brisbane","Australia/Brisbane"],
+[-31.95,115.86,2.2,"Perth","Australia/Perth"],[-34.93,138.60,1.4,"Adelaide","Australia/Adelaide"],
+[-35.28,149.13,0.5,"Canberra","Australia/Sydney"],[-36.85,174.76,1.7,"Auckland","Pacific/Auckland"],[-41.29,174.78,0.4,"Wellington","Pacific/Auckland"],
+[-43.53,172.64,0.4,"Christchurch","Pacific/Auckland"],[-9.44,147.18,0.4,"Port Moresby","Pacific/Port_Moresby"],
+[-17.75,177.45,0.2,"Nadi","Pacific/Fiji"],[21.31,-157.86,1,"Honolulu","Pacific/Honolulu"],
 ];
 
 // ------------------------------------------------------------------
@@ -365,12 +426,14 @@ function latLonToVec(lat, lon, radius){
 }
 
 const positions=[], colors=[], sizes=[];
+const cityVecs=[];                          // unit vectors per city, for tap picking
 const cNorthLo=new THREE.Color(0xFFB84D), cNorthHi=new THREE.Color(0xFF7A3D);
 const cSouthLo=new THREE.Color(0x4DD8FF), cSouthHi=new THREE.Color(0x2AA8D8);
 let maxPop=0; CITIES.forEach(c=>{ if(c[2]>maxPop) maxPop=c[2]; });
 
 CITIES.forEach(([lat,lon,pop])=>{
   const v = latLonToVec(lat,lon,R*1.005);
+  cityVecs.push(v.clone().normalize());
   positions.push(v.x,v.y,v.z);
   const t = Math.sqrt(pop/maxPop);          // sqrt scale so megacities don't drown everything
   const col = lat>=0
@@ -623,7 +686,23 @@ function tickClocks(){
 setInterval(tickClocks, 1000);
 tickClocks();
 
+function fmtPop(pop){
+  return pop >= 1 ? pop + ' million people' : Math.round(pop*1000) + ',000 people';
+}
+function showCity(name, pop, lat, tz){
+  const north = lat >= 0;
+  cardName.textContent = name;
+  cardPop.textContent = '\u2248 ' + fmtPop(pop) + ' \u00b7 metro area';
+  cardHemi.textContent = (north ? 'NORTHERN' : 'SOUTHERN') + ' HEMISPHERE \u00b7 '
+    + Math.abs(lat).toFixed(1) + '\u00b0' + (north ? 'N' : 'S');
+  cardHemi.style.color = north ? 'var(--north)' : 'var(--south)';
+  cardTz = tz;
+  cardTime.textContent = fmtTime(cardTz);
+  card.classList.add('show');
+}
+
 function handleTap(cx, cy){
+  if (introActive) return;
   const rect = canvas.getBoundingClientRect();
   tapNDC.x = ((cx-rect.left)/rect.width)*2 - 1;
   tapNDC.y = -((cy-rect.top)/rect.height)*2 + 1;
@@ -631,18 +710,27 @@ function handleTap(cx, cy){
   const hits = raycaster.intersectObjects(labelSprites.filter(s=>s.visible));
   if (hits.length){
     const d = hits[0].object.userData;
-    const north = d.lat >= 0;
-    cardName.textContent = d.name;
-    cardPop.textContent = '\u2248 ' + d.pop + ' million people \u00b7 metro area';
-    cardHemi.textContent = (north ? 'NORTHERN' : 'SOUTHERN') + ' HEMISPHERE \u00b7 '
-      + Math.abs(d.lat).toFixed(1) + '\u00b0' + (north ? 'N' : 'S');
-    cardHemi.style.color = north ? 'var(--north)' : 'var(--south)';
-    cardTz = d.tz;
-    cardTime.textContent = fmtTime(cardTz);
-    card.classList.add('show');
-  } else {
-    card.classList.remove('show');
+    showCity(d.name, d.pop, d.lat, d.tz);
+    return;
   }
+  // No label hit: every dot is tappable. Project the tap onto the sphere,
+  // then pick the nearest city within a generous, zoom-scaled radius.
+  const ground = raycaster.intersectObject(sphere);
+  if (ground.length){
+    const p = globe.worldToLocal(ground[0].point.clone()).normalize();
+    let best = -1, bestDot = -1;
+    for (let i=0; i<cityVecs.length; i++){
+      const d = p.dot(cityVecs[i]);
+      if (d > bestDot){ bestDot = d; best = i; }
+    }
+    const tol = Math.cos(0.1 * camDist / 3.4);   // 0.1 rad is ~640 km at default zoom
+    if (best >= 0 && bestDot >= tol){
+      const c = CITIES[best];
+      showCity(c[3], c[2], c[0], c[4]);
+      return;
+    }
+  }
+  card.classList.remove('show');
 }
 
 // ------------------------------------------------------------------
