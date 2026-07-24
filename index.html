@@ -107,7 +107,7 @@
 <canvas id="scene"></canvas>
 
 
-<div class="hud top">
+<div class="hud top" style="opacity:0">
   <div class="eyebrow">One planet · Two hemispheres</div>
   <h1><span class="n">87%</span> of humanity lives<br>north of <span class="eq">the equator</span></h1>
   <div class="vp-note" id="vpNote">&#9678; And more people live inside this green circle than outside it &mdash; the Valeriepieris circle, radius 3,300&nbsp;km</div>
@@ -126,11 +126,11 @@
   <div class="sub" id="sweepSub"></div>
 </div>
 
-<div class="hint" id="hint">Drag to spin · Pinch or scroll to zoom · Tap any city light</div>
+<div class="hint gone" id="hint">Drag to spin · Pinch or scroll to zoom · Tap any city light</div>
 
 <button class="ctrl" id="pauseBtn" aria-label="Pause rotation">&#10074;&#10074;</button>
 
-<div class="local-clock" id="localClockWrap"><span class="lbl">YOUR TIME</span><span id="localClock"></span></div>
+<div class="local-clock" id="localClockWrap" style="opacity:0"><span class="lbl">YOUR TIME</span><span id="localClock"></span></div>
 
 <div class="card" id="cityCard">
   <div>
@@ -145,7 +145,7 @@
   <button class="close" id="cardClose" aria-label="Close">&#10005;</button>
 </div>
 
-<div class="hud bottom">
+<div class="hud bottom" style="opacity:0">
   <div class="split">
     <div class="stat north">
       <div class="pct">≈87%</div>
@@ -557,6 +557,11 @@ function updateLabels(){
     s.material.opacity = op;
     s.visible = op > 0.02;
   });
+  // the green-circle note only shows while the circle itself faces the viewer
+  if (vpOn){
+    _n.copy(vpCenterVec).applyMatrix4(globe.matrixWorld).normalize();
+    vpNote.style.opacity = THREE.MathUtils.clamp((_n.dot(_c) - 0.05) / 0.3, 0, 1);
+  }
 }
 
 // ------------------------------------------------------------------
@@ -564,7 +569,9 @@ function updateLabels(){
 // ------------------------------------------------------------------
 let dragging=false, lastX=0, lastY=0, velX=0.0032, userVelX=0, idleTimer=0;
 let pinchDist=null;
-let downX=0, downY=0, tapMoved=false, multiTouch=false, paused=false, introActive=false;
+// introActive starts true so the HUD, labels, and circle stay hidden from the
+// very first frame; the auto-started intro takes over and endIntro reveals them
+let downX=0, downY=0, tapMoved=false, multiTouch=false, paused=false, introActive=true;
 const hint = document.getElementById('hint');
 let hintHidden=false;
 
@@ -749,6 +756,7 @@ pauseBtn.addEventListener('click', ()=>{
 // ------------------------------------------------------------------
 const VP_CENTER = {lat: 21.9, lon: 99.0};
 const VP_ANG = 3300 / 6371;                    // radius in km → angle on the sphere
+const vpCenterVec = latLonToVec(VP_CENTER.lat, VP_CENTER.lon, 1).normalize();
 const vpGroup = new THREE.Group();
 globe.add(vpGroup);
 (function buildVP(){
@@ -894,7 +902,7 @@ function startIntro(){
   sweepCounter.classList.add('show');
   sweepBig.textContent = '0%';
   sweepSub.textContent = 'OF HUMANITY LIVES NORTH OF THE EQUATOR';
-  hideHint();
+  hint.classList.add('gone');
 }
 function endIntro(){
   introActive = false;
@@ -905,6 +913,11 @@ function endIntro(){
   bottomHud.style.opacity = 1;
   localClockWrap.style.opacity = 1;
   vpGroup.visible = vpOn;
+  // the hint waits for the intro to finish, unless the user already interacted
+  if (!hintHidden){
+    hint.classList.remove('gone');
+    setTimeout(hideHint, 8000);
+  }
 }
 introBtn.addEventListener('click', ()=>{ if(!introActive) startIntro(); });
 
@@ -983,10 +996,7 @@ function tick(){
 tick();
 
 // play the intro automatically on load
-setTimeout(startIntro, 700);
-
-// hide hint after a while regardless
-setTimeout(hideHint, 7000);
+setTimeout(startIntro, 150);
 </script>
 </body>
 </html>
